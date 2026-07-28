@@ -146,10 +146,12 @@ td button:active { transform: scale(.88); }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes rowIn { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: translateX(0); } }
 .estado.andando::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #3a8a5a; margin-right: 6px; }
-.badge-novato, .badge-profesional, .badge-none { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: .75rem; font-weight: 500; }
-.badge-novato { background: #eef2f6; color: #3a6a9a; }
-.badge-profesional { background: #eef2f6; color: #2a7a48; }
-.badge-none { background: transparent; color: #8a9ab0; font-weight: 400; }
+.badge-none { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: .75rem; font-weight: 500; background: transparent; color: #8a9ab0; font-weight: 400; }
+.badge-nm, .badge-nf, .badge-pm, .badge-pf { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: .75rem; font-weight: 500; }
+.badge-nm { background: #e3f0fa; color: #2a6a9a; }
+.badge-nf { background: #fce4ec; color: #a53a5a; }
+.badge-pm { background: #e3f5e8; color: #2a7a48; }
+.badge-pf { background: #fff3e0; color: #b86a20; }
 .filtros-cat { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; animation: slideUp .45s ease-out .3s both; }
 .filtro-cat { padding: 5px 14px; font-size: .8rem; border-radius: 6px; border: 1px solid #dce0e8; background: #f4f6f9; color: #1c2838; cursor: pointer; font-weight: 500; transition: all .15s ease; font-family: inherit; }
 .filtro-cat:hover { background: #e8ecf0; }
@@ -214,8 +216,10 @@ td button:active { transform: scale(.88); }
       <input id="nombre-input" placeholder="Nombre del corredor">
       <select id="categoria-input">
         <option value="">Sin categoría</option>
-        <option value="Novato">Novato</option>
-        <option value="Profesional">Profesional</option>
+        <option value="Novato Masculino">Novato Masculino</option>
+        <option value="Novato Femenino">Novato Femenino</option>
+        <option value="Profesional Masculino">Profesional Masculino</option>
+        <option value="Profesional Femenino">Profesional Femenino</option>
       </select>
       <button onclick="registrar(this)">Registrar</button>
       <button onclick="document.getElementById('excel-input').click()">Importar Excel</button>
@@ -233,8 +237,10 @@ td button:active { transform: scale(.88); }
     <div class="fila espaciada">
       <select id="modo-registro" onchange="cambioModo(this)">
         <option value="">Todos</option>
-        <option value="Novato">Solo Novatos</option>
-        <option value="Profesional">Solo Profesionales</option>
+        <option value="Novato Masculino">Novato Masculino</option>
+        <option value="Novato Femenino">Novato Femenino</option>
+        <option value="Profesional Masculino">Profesional Masculino</option>
+        <option value="Profesional Femenino">Profesional Femenino</option>
       </select>
       <input id="llegada-input" placeholder="Número dorsal">
       <button class="verde" onclick="llegada(this)">Registrar llegada</button>
@@ -253,8 +259,10 @@ td button:active { transform: scale(.88); }
   </div>
   <div class="filtros-cat" id="filtros-cat">
     <button class="filtro-cat activo" data-cat="" onclick="filtrarCategoria('')">Todos</button>
-    <button class="filtro-cat" data-cat="Novato" onclick="filtrarCategoria('Novato')">Novato</button>
-    <button class="filtro-cat" data-cat="Profesional" onclick="filtrarCategoria('Profesional')">Profesional</button>
+    <button class="filtro-cat" data-cat="Novato Masculino" onclick="filtrarCategoria('Novato Masculino')">Novato M</button>
+    <button class="filtro-cat" data-cat="Novato Femenino" onclick="filtrarCategoria('Novato Femenino')">Novato F</button>
+    <button class="filtro-cat" data-cat="Profesional Masculino" onclick="filtrarCategoria('Profesional Masculino')">Profesional M</button>
+    <button class="filtro-cat" data-cat="Profesional Femenino" onclick="filtrarCategoria('Profesional Femenino')">Profesional F</button>
     <button class="filtro-cat" data-cat="Sin categoría" onclick="filtrarCategoria('Sin categoría')">Sin categoría</button>
   </div>
   <div class="contador" id="contador"></div>
@@ -285,9 +293,7 @@ function filtrarCategoria(cat) {
   cargar();
 }
 function cambioModo(el) {
-  const val = el.value;
-  const cat = val === "Novato" ? "Novato" : val === "Profesional" ? "Profesional" : "";
-  filtrarCategoria(cat);
+  filtrarCategoria(el.value);
 }
 
 function cargar() {
@@ -307,7 +313,8 @@ function cargar() {
       const llegada = c.tiempo_llegada || '—';
       const posCat = c.posicion_categoria ? '#' + c.posicion_categoria : '—';
       const cat = c.categoria || '';
-      const badge = cat ? '<span class="badge-' + cat.toLowerCase() + '">' + cat + '</span>' : '<span class="badge-none">—</span>';
+      const bc = {'Novato Masculino':'nm','Novato Femenino':'nf','Profesional Masculino':'pm','Profesional Femenino':'pf'};
+      const badge = cat && bc[cat] ? '<span class="badge-' + bc[cat] + '">' + cat + '</span>' : cat ? '<span class="badge-none">' + cat + '</span>' : '<span class="badge-none">—</span>';
       tr.innerHTML = '<td>' + esc(c.dorsal) + '</td><td>' + esc(c.nombre) + '</td><td>' + badge + '</td><td>' + llegada + '</td><td>' + esc(posCat) + '</td><td></td>';
       const btn = document.createElement('button');
       btn.className = 'rojo';
@@ -444,10 +451,21 @@ function finalizar() {
   });
 }
 function limpiar() {
-  confirmarModal('¿Borrar todos los corredores y reiniciar la carrera?').then(r => {
-    if (!r) return;
-    fetch('/api/limpiar', {method:'POST'}).then(r=>r.json()).then(d=> { if(d.error) mostrarModal(d.error); else toast('Datos eliminados'); cargar(); }).catch(e => mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'));
-  });
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-msg').textContent = '⚠️ ESTÁS A PUNTO DE ELIMINAR TODOS LOS CORREDORES.\n\nEsta acción no se puede deshacer.';
+  document.getElementById('modal-botones').innerHTML =
+    '<button class="btn-si" id="btn-limpiar-warn">Aceptar</button>' +
+    '<button class="btn-no" onclick="cerrarModal()">Cancelar</button>';
+  modal.classList.add('show');
+  document.getElementById('btn-limpiar-warn').onclick = function() {
+    cerrarModal();
+    setTimeout(() => {
+      confirmarModal('¿Estás seguro de eliminar TODOS los corredores y reiniciar la carrera?').then(r => {
+        if (!r) return;
+        fetch('/api/limpiar', {method:'POST'}).then(r=>r.json()).then(d=> { if(d.error) mostrarModal(d.error); else toast('Datos eliminados'); cargar(); }).catch(e => mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'));
+      });
+    }, 200);
+  };
 }
 let _resultadosData = null;
 function renderResultados() {
@@ -477,7 +495,7 @@ function resultados() {
       if (!cats[c.categoria]) cats[c.categoria] = [];
       cats[c.categoria].push(c);
     });
-    const ordenCats = ['Novato', 'Profesional', 'Sin categoría'];
+    const ordenCats = ['Novato Masculino', 'Novato Femenino', 'Profesional Masculino', 'Profesional Femenino', 'Sin categoría'];
     _resultadosData = { llegados: d.llegados, cats, ordenCats };
     const modal = document.getElementById('modal');
     document.getElementById('modal-msg').innerHTML = '<input id="resultados-search" placeholder="Buscar por nombre o número..." oninput="renderResultados()" style="width:100%;padding:10px 14px;font-size:.9rem;border-radius:8px;border:1px solid #d0d8e0;outline:none;font-family:inherit;margin-bottom:14px;background:#fff;color:#1c2838;box-sizing:border-box;"><div id="resultados-tabla"></div>';
@@ -494,7 +512,7 @@ function reporte() {
 function estadisticas() {
   fetch('/api/estadisticas').then(r=>r.json()).then(d => {
     if (d.error) return mostrarModal(d.error);
-    const cats = ['Novato', 'Profesional', 'Sin categoría'];
+    const cats = ['Novato Masculino', 'Novato Femenino', 'Profesional Masculino', 'Profesional Femenino', 'Sin categoría'];
     const maxCat = Math.max(1, ...cats.map(c => d.por_categoria[c] || 0));
     const maxArr = Math.max(1, ...cats.map(c => d.llegados_por_categoria[c] || 0));
     const pct = function(val, max) { return Math.round((val / max) * 100); };
@@ -824,6 +842,7 @@ def api_importar_excel():
         col_dorsal = None
         col_nombre = None
         col_categoria = None
+        col_genero = None
         for i, h in enumerate(header_names):
             h_lower = h.lower()
             if "dorsal" in h_lower or "numero" in h_lower or "num" in h_lower:
@@ -832,6 +851,8 @@ def api_importar_excel():
                 col_nombre = i
             if "categoria" in h_lower or "categoría" in h_lower or "cat" in h_lower or "tipo" in h_lower or "nivel" in h_lower or "clase" in h_lower or "grupo" in h_lower or "division" in h_lower or "división" in h_lower or "novato" in h_lower or "profesional" in h_lower:
                 col_categoria = i
+            if "genero" in h_lower or "gênero" in h_lower or "sexo" in h_lower or "gender" in h_lower:
+                col_genero = i
         if col_dorsal is None or col_nombre is None:
             return jsonify(error="No se encontraron columnas 'Número' y 'Nombre'."), 400
         conn = get_db()
@@ -851,11 +872,23 @@ def api_importar_excel():
                 ejemplo_valor = repr(raw)
                 val = str(raw).strip().lower()
                 if "novato" in val:
-                    categoria = "Novato"
+                    base = "Novato"
                 elif "profesional" in val:
-                    categoria = "Profesional"
+                    base = "Profesional"
                 else:
+                    base = ""
                     ejemplo_valor = f"'{raw}' (no coincide)"
+                genero = ""
+                if col_genero is not None and row[col_genero] is not None:
+                    g = str(row[col_genero]).strip().lower()
+                    if "masculino" in g or g in ("m", "hombre", "male", "h"):
+                        genero = "Masculino"
+                    elif "femenino" in g or g in ("f", "mujer", "female", "muj"):
+                        genero = "Femenino"
+                if base and genero:
+                    categoria = f"{base} {genero}"
+                elif base:
+                    categoria = base
             cur.execute("""
                 INSERT INTO corredores (dorsal, nombre, categoria) VALUES (%s, %s, %s)
                 ON CONFLICT (dorsal) DO UPDATE SET nombre = %s, categoria = %s,
@@ -1007,7 +1040,7 @@ def api_reporte():
         row_fill_even = PatternFill(start_color="f4f6f9", end_color="f4f6f9", fill_type="solid")
         title_font = Font(bold=True, size=13, color="2c5f8a")
         headers = ["Posición General", "Pos. Categoría", "Núm.", "Nombre", "Tiempo"]
-        cats = ["Novato", "Profesional"]
+        cats = ["Novato Masculino", "Novato Femenino", "Profesional Masculino", "Profesional Femenino"]
         for cat in cats:
             ws = wb.create_sheet(title=cat)
             cat_rows = [r for r in rows if (r[4] or "Sin categoría") == cat]
