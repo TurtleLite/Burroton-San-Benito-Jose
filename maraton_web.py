@@ -76,7 +76,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Robo
 .header img { height: 120px; width: auto; object-fit: contain; transition: transform .4s cubic-bezier(.34,1.56,.64,1); }
 .header img:hover { transform: scale(1.05); }
 .header .header-titles { flex: 1; text-align: center; animation: fadeIn 1s ease .2s both; }
-.header .header-titles .header-sub { font-size: .8rem; color: #8a9aa8; font-weight: 400; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 2px; }
+.header .header-titles .header-sub { font-size: .8rem; color: #8a9aa8; font-weight: 400; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 6px; }
 .header .header-titles .header-main { font-size: 2.2rem; color: #1c2838; font-weight: 900; letter-spacing: -.02em; font-family: 'Inter', -apple-system, sans-serif; line-height: 1.2; }
 .main-content { padding: 28px 44px 80px; flex: 1; }
 .barra { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
