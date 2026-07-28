@@ -249,6 +249,7 @@ td button:active { transform: scale(.88); }
   <div class="seccion">
     <h2>Reportes</h2>
     <div class="fila">
+      <button onclick="asignarGenero()">Asignar género aleatorio</button>
       <button onclick="resultados()">Ver resultados</button>
       <button onclick="reporte()">Descargar reporte</button>
       <button onclick="estadisticas()">Estadísticas</button>
@@ -584,6 +585,12 @@ function importarExcel(file) {
     .then(d => { if(d.error) mostrarModal(d.error); else toast(d.mensaje); cargar(); })
     .catch(e => { console.error('Error import:', e); mostrarModal('Error al importar: ' + e.message); })
     .finally(() => { inp.value = ''; });
+}
+function asignarGenero() {
+  _fetch('/api/asignar_genero', {method:'POST'}, null).then(d => {
+    if(d.error) mostrarModal(d.error);
+    else { toast('Género asignado a ' + d.actualizados + ' corredores'); cargar(); }
+  });
 }
 function actualizarConexion(estado) {
   const dot = document.getElementById('con-indicator');
@@ -1088,6 +1095,31 @@ def api_reporte():
     except Exception as e:
         traceback.print_exc()
         return jsonify(error="Error al generar reporte"), 500
+
+@app.route("/api/asignar_genero", methods=["POST"])
+def api_asignar_genero():
+    init_db()
+    conn = get_db()
+    if not conn:
+        return jsonify(error="Base de datos no disponible"), 503
+    try:
+        cur = conn.cursor()
+        categorias = ["Novato Masculino", "Novato Femenino", "Profesional Masculino", "Profesional Femenino"]
+        cur.execute("SELECT id, categoria FROM corredores WHERE categoria IS NULL OR categoria = ''")
+        rows = cur.fetchall()
+        if not rows:
+            cur.close()
+            return jsonify(actualizados=0)
+        import random
+        for row in rows:
+            cat = random.choice(categorias)
+            cur.execute("UPDATE corredores SET categoria = %s WHERE id = %s", (cat, row[0]))
+        conn.commit()
+        cur.close()
+        return jsonify(actualizados=len(rows))
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify(error="Error al asignar género"), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
