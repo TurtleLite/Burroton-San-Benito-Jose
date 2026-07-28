@@ -12,6 +12,15 @@ app.static_folder = "static"
 
 DB_URL = os.environ.get("DATABASE_URL", "postgresql://maraton_db_yu80_user:PGKNIB3F5HTynSqz7Vx6x01vJcQVG3bD@dpg-d97vq9qabeoc739aqnmg-a.virginia-postgres.render.com/maraton_db_yu80?sslmode=require")
 
+def _genero(cat):
+    if not cat:
+        return ""
+    if "Femenino" in cat:
+        return "F"
+    if "Masculino" in cat:
+        return "M"
+    return ""
+
 def get_db():
     if 'db' not in g:
         try:
@@ -315,7 +324,7 @@ function cargar() {
       const cat = c.categoria || '';
       const bc = {'Novato Masculino':'nm','Novato Femenino':'nf','Profesional Masculino':'pm','Profesional Femenino':'pf'};
       const badge = cat && bc[cat] ? '<span class="badge-' + bc[cat] + '">' + cat + '</span>' : cat ? '<span class="badge-none">' + cat + '</span>' : '<span class="badge-none">—</span>';
-      const genero = cat.includes('Femenino') ? 'F' : cat.includes('Masculino') ? 'M' : '—';
+      const genero = c.genero || '—';
       let tiempo = '—';
       if (c.tiempo_llegada && d.hora_inicio) {
         const diff = new Date(c.tiempo_llegada) - new Date(d.hora_inicio);
@@ -590,7 +599,7 @@ function asignarGenero() {
   _fetch('/api/asignar_genero', {method:'POST'}, null).then(d => {
     if(d.error) mostrarModal(d.error);
     else { toast('Género asignado a ' + d.actualizados + ' corredores'); cargar(); }
-  });
+  }).catch(e => {});
 }
 function actualizarConexion(estado) {
   const dot = document.getElementById('con-indicator');
@@ -634,7 +643,8 @@ def api_datos():
         rows = cur.fetchall()
         corredores = []
         for r in rows:
-            corredores.append({"dorsal": r["dorsal"], "nombre": r["nombre"], "categoria": r["categoria"] or "", "tiempo_llegada": r["tiempo_llegada"].isoformat() if r["tiempo_llegada"] else None, "posicion": r["posicion"], "posicion_categoria": r["posicion_categoria"]})
+            cat = r["categoria"] or ""
+            corredores.append({"dorsal": r["dorsal"], "nombre": r["nombre"], "categoria": cat, "genero": _genero(cat), "tiempo_llegada": r["tiempo_llegada"].isoformat() if r["tiempo_llegada"] else None, "posicion": r["posicion"], "posicion_categoria": r["posicion_categoria"]})
         cur.execute("SELECT iniciada, hora_inicio FROM carrera WHERE id = 1")
         c = cur.fetchone()
         cur.close()
@@ -658,7 +668,8 @@ def api_buscar():
         rows = cur.fetchall()
         corredores = []
         for r in rows:
-            corredores.append({"dorsal": r["dorsal"], "nombre": r["nombre"], "categoria": r["categoria"] or "", "tiempo_llegada": r["tiempo_llegada"].isoformat() if r["tiempo_llegada"] else None, "posicion": r["posicion"], "posicion_categoria": r["posicion_categoria"]})
+            cat = r["categoria"] or ""
+            corredores.append({"dorsal": r["dorsal"], "nombre": r["nombre"], "categoria": cat, "genero": _genero(cat), "tiempo_llegada": r["tiempo_llegada"].isoformat() if r["tiempo_llegada"] else None, "posicion": r["posicion"], "posicion_categoria": r["posicion_categoria"]})
         cur.execute("SELECT iniciada, hora_inicio FROM carrera WHERE id = 1")
         c = cur.fetchone()
         cur.close()
