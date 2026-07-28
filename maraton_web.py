@@ -131,7 +131,7 @@ td button:active { transform: scale(.88); }
 .modal-overlay.show { opacity: 1; pointer-events: auto; }
 .modal-card { background: #fff; border-radius: 10px; padding: 28px 32px; max-width: 440px; width: 92%; box-shadow: 0 12px 40px rgba(0,0,0,.15); text-align: center; transform: translateY(8px); transition: transform .25s ease; }
 .modal-overlay.show .modal-card { transform: translateY(0); }
-.modal-card p { font-size: .95rem; color: #1c2838; margin-bottom: 24px; line-height: 1.6; white-space: pre-wrap; }
+.modal-card .modal-msg { font-size: .95rem; color: #1c2838; margin-bottom: 24px; line-height: 1.6; }
 .modal-card .botones { display: flex; gap: 12px; justify-content: center; }
 .modal-card button { padding: 9px 22px; border-radius: 8px; border: none; font-weight: 500; font-size: .875rem; cursor: pointer; transition: all .15s ease; font-family: inherit; }
 .modal-card .btn-si { background: #3a8a5a; color: #fff; }
@@ -264,7 +264,7 @@ td button:active { transform: scale(.88); }
 <div id="toast" class="toast"></div>
 <div class="modal-overlay" id="modal">
   <div class="modal-card">
-    <p id="modal-msg"></p>
+    <div id="modal-msg" class="modal-msg"></div>
     <div class="botones" id="modal-botones"></div>
   </div>
 </div>
@@ -980,37 +980,62 @@ def api_reporte():
         if not inicio:
             cur.close()
             return jsonify(error="La carrera no ha iniciado."), 400
-        cur.execute("SELECT posicion, posicion_categoria, dorsal, categoria, tiempo_llegada FROM corredores WHERE tiempo_llegada IS NOT NULL ORDER BY COALESCE(categoria, ''), posicion_categoria, id")
+        cur.execute("SELECT posicion, posicion_categoria, dorsal, nombre, categoria, tiempo_llegada FROM corredores WHERE tiempo_llegada IS NOT NULL ORDER BY COALESCE(categoria, ''), posicion_categoria, id")
         rows = cur.fetchall()
         cur.close()
-        from openpyxl.styles import Font, Alignment
+        from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+        from openpyxl.utils import get_column_letter
         wb = openpyxl.Workbook()
         wb.remove(wb.active)
-        headers = ["Posición General", "Pos. Categoría", "Núm.", "Tiempo"]
+        hdr_fill = PatternFill(start_color="1c2838", end_color="1c2838", fill_type="solid")
+        hdr_font = Font(bold=True, color="ffffff", size=11)
+        hdr_align = Alignment(horizontal="center", vertical="center")
+        cell_font = Font(size=10)
+        cell_align = Alignment(horizontal="center", vertical="center")
+        thin_border = Border(
+            left=Side(style="thin", color="d0d8e0"),
+            right=Side(style="thin", color="d0d8e0"),
+            top=Side(style="thin", color="d0d8e0"),
+            bottom=Side(style="thin", color="d0d8e0"),
+        )
+        row_fill_even = PatternFill(start_color="f4f6f9", end_color="f4f6f9", fill_type="solid")
+        title_font = Font(bold=True, size=13, color="2c5f8a")
+        headers = ["Posición General", "Pos. Categoría", "Núm.", "Nombre", "Tiempo"]
         cats = ["Novato", "Profesional"]
         for cat in cats:
             ws = wb.create_sheet(title=cat)
-            cat_rows = [r for r in rows if (r[3] or "Sin categoría") == cat]
-            for c in headers:
-                cell = ws.cell(row=1, column=headers.index(c) + 1, value=c)
-                cell.font = Font(bold=True)
-                cell.alignment = Alignment(horizontal="center")
+            cat_rows = [r for r in rows if (r[4] or "Sin categoría") == cat]
+            ws.cell(row=1, column=1, value=f"🏅 {cat.upper()}").font = title_font
+            ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+            for ci, h in enumerate(headers, 1):
+                cell = ws.cell(row=2, column=ci, value=h)
+                cell.font = hdr_font
+                cell.fill = hdr_fill
+                cell.alignment = hdr_align
+                cell.border = thin_border
             for i, r in enumerate(cat_rows, 1):
-                trans = abs(r[4] - inicio)
-                h, resto = divmod(int(trans.total_seconds()), 3600)
-                m, s = divmod(resto, 60)
-                ws.cell(row=i + 1, column=1, value=r[0])
-                ws.cell(row=i + 1, column=2, value=r[1])
-                ws.cell(row=i + 1, column=3, value=r[2])
-                ws.cell(row=i + 1, column=4, value=f"{h}h {m}m {s}s")
-            ws.column_dimensions["A"].width = 18
-            ws.column_dimensions["B"].width = 16
+                row_num = i + 2
+                trans = abs(r[5] - inicio)
+                hh, resto = divmod(int(trans.total_seconds()), 3600)
+                mm, ss = divmod(resto, 60)
+                vals = [r[0], r[1], r[2], r[3], f"{hh}h {mm}m {ss}s"]
+                for ci, v in enumerate(vals, 1):
+                    cell = ws.cell(row=row_num, column=ci, value=v)
+                    cell.font = cell_font
+                    cell.alignment = cell_align
+                    cell.border = thin_border
+                    if i % 2 == 0:
+                        cell.fill = row_fill_even
+            ws.column_dimensions["A"].width = 20
+            ws.column_dimensions["B"].width = 18
             ws.column_dimensions["C"].width = 10
-            ws.column_dimensions["D"].width = 16
+            ws.column_dimensions["D"].width = 28
+            ws.column_dimensions["E"].width = 18
+            ws.sheet_properties.pageSetUpPr = openpyxl.worksheet.properties.PageSetupProperties(fitToPage=True)
         buf = io.BytesIO()
         wb.save(buf)
         buf.seek(0)
-        return send_file(buf, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", as_attachment=True, download_name="reporte_maraton.xlsx")
+        return send_file(buf, mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", as_attachment=True, download_name="reporte_burroton.xlsx")
     except Exception as e:
         traceback.print_exc()
         return jsonify(error="Error al generar reporte"), 500
