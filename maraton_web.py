@@ -75,7 +75,9 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Robo
 .header { display: flex; align-items: center; justify-content: space-between; gap: 24px; position: relative; z-index: 1; }
 .header img { height: 120px; width: auto; object-fit: contain; transition: transform .4s cubic-bezier(.34,1.56,.64,1); }
 .header img:hover { transform: scale(1.05); }
-.header h1 { font-size: 1.9rem; color: #1c2838; text-align: center; flex: 1; font-weight: 800; letter-spacing: -.01em; font-family: 'Inter', -apple-system, sans-serif; animation: fadeIn 1s ease .2s both; line-height: 1.3; }
+.header .header-titles { flex: 1; text-align: center; animation: fadeIn 1s ease .2s both; }
+.header .header-titles .header-sub { font-size: .8rem; color: #8a9aa8; font-weight: 400; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 2px; }
+.header .header-titles .header-main { font-size: 2.2rem; color: #1c2838; font-weight: 900; letter-spacing: -.02em; font-family: 'Inter', -apple-system, sans-serif; line-height: 1.2; }
 .main-content { padding: 28px 44px 80px; flex: 1; }
 .barra { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .barra button, .barra input, .barra select { padding: 9px 16px; font-size: .85rem; border-radius: 8px; border: 1px solid #dce0e8; outline: none; font-family: inherit; }
@@ -179,7 +181,8 @@ td button:active { transform: scale(.88); }
 @media (max-width: 700px) {
   .header-wrap { padding: 18px 20px 14px; }
   .header { gap: 12px; }
-  .header h1 { font-size: 1.3rem; }
+  .header .header-main { font-size: 1.5rem; }
+  .header .header-sub { font-size: .65rem; }
   .header img { height: 65px; }
   .main-content { padding: 18px 16px 70px; }
   .barra button, .barra input, .barra select { font-size: .8rem; padding: 9px 14px; }
@@ -196,7 +199,10 @@ td button:active { transform: scale(.88); }
   <div class="header-wrap">
     <div class="header">
       <img src="{{ logo_izq }}" alt="Logo">
-      <h1>Burrotón San Benito José</h1>
+      <div class="header-titles">
+        <div class="header-sub">Centro Medico San Benito Jose</div>
+        <div class="header-main">Burrotón</div>
+      </div>
       <img src="{{ logo_der }}" alt="Logo">
     </div>
   </div>
