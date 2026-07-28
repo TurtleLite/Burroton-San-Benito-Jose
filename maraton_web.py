@@ -447,9 +447,8 @@ let _resultadosData = null;
 function renderResultados() {
   if (!_resultadosData) return;
   const q = (document.getElementById('resultados-search')?.value || '').toLowerCase().trim();
-  const { llegados, cats, ordenCats } = _resultadosData;
-  let html = '<input id="resultados-search" placeholder="Buscar por nombre o número..." oninput="renderResultados()" style="width:100%;padding:10px 14px;font-size:.9rem;border-radius:8px;border:1px solid #d0d8e0;outline:none;font-family:inherit;margin-bottom:14px;background:#fff;color:#1c2838;box-sizing:border-box;">';
-  html += '<div style="max-height:420px;overflow-y:auto;">';
+  const { cats, ordenCats } = _resultadosData;
+  let html = '<div style="max-height:420px;overflow-y:auto;">';
   ordenCats.forEach(cat => {
     if (!cats[cat]) return;
     const filtered = cats[cat].filter(c => !q || c.nombre.toLowerCase().includes(q) || c.dorsal.toLowerCase().includes(q));
@@ -462,7 +461,7 @@ function renderResultados() {
     html += '</table>';
   });
   html += '</div>';
-  document.getElementById('modal-msg').innerHTML = html;
+  document.getElementById('resultados-tabla').innerHTML = html;
 }
 function resultados() {
   fetch('/api/resultados').then(r=>r.json()).then(d=> {
@@ -475,6 +474,7 @@ function resultados() {
     const ordenCats = ['Novato', 'Profesional', 'Sin categoría'];
     _resultadosData = { llegados: d.llegados, cats, ordenCats };
     const modal = document.getElementById('modal');
+    document.getElementById('modal-msg').innerHTML = '<input id="resultados-search" placeholder="Buscar por nombre o número..." oninput="renderResultados()" style="width:100%;padding:10px 14px;font-size:.9rem;border-radius:8px;border:1px solid #d0d8e0;outline:none;font-family:inherit;margin-bottom:14px;background:#fff;color:#1c2838;box-sizing:border-box;"><div id="resultados-tabla"></div>';
     renderResultados();
     document.getElementById('modal-botones').innerHTML = '<button class="btn-ok" onclick="cerrarModal(); _resultadosData=null">Cerrar</button>';
     modal.classList.add('show');
