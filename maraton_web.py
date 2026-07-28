@@ -452,7 +452,7 @@ function finalizar() {
 }
 function limpiar() {
   const modal = document.getElementById('modal');
-  document.getElementById('modal-msg').textContent = '⚠️ ESTÁS A PUNTO DE ELIMINAR TODOS LOS CORREDORES.\n\nEsta acción no se puede deshacer.';
+  document.getElementById('modal-msg').textContent = '⚠️ ESTÁS A PUNTO DE ELIMINAR TODOS LOS CORREDORES.\\n\\nEsta acción no se puede deshacer.';
   document.getElementById('modal-botones').innerHTML =
     '<button class="btn-si" id="btn-limpiar-warn">Aceptar</button>' +
     '<button class="btn-no" onclick="cerrarModal()">Cancelar</button>';
