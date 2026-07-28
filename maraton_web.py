@@ -323,7 +323,8 @@ function cargar() {
       const posCat = c.posicion_categoria ? '#' + c.posicion_categoria : '—';
       const cat = c.categoria || '';
       const bc = {'Novato Masculino':'nm','Novato Femenino':'nf','Profesional Masculino':'pm','Profesional Femenino':'pf'};
-      const badge = cat && bc[cat] ? '<span class="badge-' + bc[cat] + '">' + cat + '</span>' : cat ? '<span class="badge-none">' + cat + '</span>' : '<span class="badge-none">—</span>';
+      const label = cat.startsWith('Novato') ? 'Novato' : cat.startsWith('Profesional') ? 'Profesional' : cat || '—';
+      const badge = cat && bc[cat] ? '<span class="badge-' + bc[cat] + '">' + label + '</span>' : cat ? '<span class="badge-none">' + label + '</span>' : '<span class="badge-none">—</span>';
       const genero = c.genero || '—';
       let tiempo = '—';
       if (c.tiempo_llegada && d.hora_inicio) {
