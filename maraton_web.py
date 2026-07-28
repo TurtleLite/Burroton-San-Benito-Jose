@@ -259,7 +259,6 @@ td button:active { transform: scale(.88); }
   <div class="seccion">
     <h2>Reportes</h2>
     <div class="fila">
-      <button onclick="asignarGenero()">Asignar género aleatorio</button>
       <button onclick="resultados()">Ver resultados</button>
       <button onclick="reporte()">Descargar reporte</button>
       <button onclick="estadisticas()">Estadísticas</button>
@@ -595,12 +594,6 @@ function importarExcel(file) {
     .then(d => { if(d.error) mostrarModal(d.error); else toast(d.mensaje); cargar(); })
     .catch(e => { console.error('Error import:', e); mostrarModal('Error al importar: ' + e.message); })
     .finally(() => { inp.value = ''; });
-}
-function asignarGenero() {
-  _fetch('/api/asignar_genero', {method:'POST'}, null).then(d => {
-    if(d.error) mostrarModal(d.error);
-    else { toast('Género asignado a ' + d.actualizados + ' corredores'); cargar(); }
-  }).catch(e => {});
 }
 function actualizarConexion(estado) {
   const dot = document.getElementById('con-indicator');
