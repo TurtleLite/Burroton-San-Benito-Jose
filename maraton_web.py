@@ -1105,7 +1105,7 @@ def api_asignar_genero():
     try:
         cur = conn.cursor()
         categorias = ["Novato Masculino", "Novato Femenino", "Profesional Masculino", "Profesional Femenino"]
-        cur.execute("SELECT id, categoria FROM corredores WHERE categoria IS NULL OR categoria = ''")
+        cur.execute("SELECT id, categoria FROM corredores WHERE categoria IS NULL OR categoria = '' OR (categoria NOT LIKE '%Masculino%' AND categoria NOT LIKE '%Femenino%')")
         rows = cur.fetchall()
         if not rows:
             cur.close()
