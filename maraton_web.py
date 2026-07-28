@@ -1042,7 +1042,7 @@ def api_reporte():
         if not inicio:
             cur.close()
             return jsonify(error="La carrera no ha iniciado."), 400
-        cur.execute("SELECT posicion, posicion_categoria, dorsal, nombre, categoria, tiempo_llegada FROM corredores WHERE tiempo_llegada IS NOT NULL ORDER BY COALESCE(categoria, ''), posicion_categoria, id")
+        cur.execute("SELECT posicion, posicion_categoria, dorsal, nombre, categoria, tiempo_llegada FROM corredores ORDER BY COALESCE(categoria, ''), id")
         rows = cur.fetchall()
         cur.close()
         from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -1062,7 +1062,8 @@ def api_reporte():
         )
         row_fill_even = PatternFill(start_color="f4f6f9", end_color="f4f6f9", fill_type="solid")
         title_font = Font(bold=True, size=13, color="2c5f8a")
-        headers = ["Posición General", "Pos. Categoría", "Núm.", "Nombre", "Tiempo"]
+        no_llegado_fill = PatternFill(start_color="fff3e0", end_color="fff3e0", fill_type="solid")
+        headers = ["Posición General", "Pos. Categoría", "Núm.", "Nombre", "Llegó", "Tiempo"]
         cats = ["Novato Masculino", "Novato Femenino", "Profesional Masculino", "Profesional Femenino"]
         for cat in cats:
             ws = wb.create_sheet(title=cat)
@@ -1077,22 +1078,28 @@ def api_reporte():
                 cell.border = thin_border
             for i, r in enumerate(cat_rows, 1):
                 row_num = i + 2
-                trans = abs(r[5] - inicio)
-                hh, resto = divmod(int(trans.total_seconds()), 3600)
-                mm, ss = divmod(resto, 60)
-                vals = [r[0], r[1], r[2], r[3], f"{hh}h {mm}m {ss}s"]
+                if r[5]:
+                    trans = abs(r[5] - inicio)
+                    hh, resto = divmod(int(trans.total_seconds()), 3600)
+                    mm, ss = divmod(resto, 60)
+                    vals = [r[0] or "—", r[1] or "—", r[2], r[3], "Sí", f"{hh}h {mm}m {ss}s"]
+                else:
+                    vals = ["—", "—", r[2], r[3], "No", "—"]
                 for ci, v in enumerate(vals, 1):
                     cell = ws.cell(row=row_num, column=ci, value=v)
                     cell.font = cell_font
                     cell.alignment = cell_align
                     cell.border = thin_border
-                    if i % 2 == 0:
+                    if not r[5]:
+                        cell.fill = no_llegado_fill
+                    elif i % 2 == 0:
                         cell.fill = row_fill_even
             ws.column_dimensions["A"].width = 20
             ws.column_dimensions["B"].width = 18
             ws.column_dimensions["C"].width = 10
             ws.column_dimensions["D"].width = 28
-            ws.column_dimensions["E"].width = 18
+            ws.column_dimensions["E"].width = 8
+            ws.column_dimensions["F"].width = 18
             ws.sheet_properties.pageSetUpPr = openpyxl.worksheet.properties.PageSetupProperties(fitToPage=True)
         buf = io.BytesIO()
         wb.save(buf)
