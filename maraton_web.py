@@ -268,7 +268,7 @@ td button:active { transform: scale(.88); }
   <div class="contador" id="contador"></div>
   <div class="tabla-wrap">
     <table>
-      <thead><tr><th>Núm.</th><th>Nombre</th><th>Cat.</th><th>Llegada</th><th>Pos. Cat.</th><th>Acción</th></tr></thead>
+      <thead><tr><th>Núm.</th><th>Nombre</th><th>Cat.</th><th>Gén.</th><th>Tiempo</th><th>Pos. Cat.</th><th>Acción</th></tr></thead>
       <tbody id="tabla"></tbody>
     </table>
   </div>
@@ -310,12 +310,22 @@ function cargar() {
       const tr = document.createElement('tr');
       tr.style.animation = 'rowIn .35s ease-out both';
       tr.style.animationDelay = Math.min(i * 0.025, 0.6) + 's';
-      const llegada = c.tiempo_llegada || '—';
       const posCat = c.posicion_categoria ? '#' + c.posicion_categoria : '—';
       const cat = c.categoria || '';
       const bc = {'Novato Masculino':'nm','Novato Femenino':'nf','Profesional Masculino':'pm','Profesional Femenino':'pf'};
       const badge = cat && bc[cat] ? '<span class="badge-' + bc[cat] + '">' + cat + '</span>' : cat ? '<span class="badge-none">' + cat + '</span>' : '<span class="badge-none">—</span>';
-      tr.innerHTML = '<td>' + esc(c.dorsal) + '</td><td>' + esc(c.nombre) + '</td><td>' + badge + '</td><td>' + llegada + '</td><td>' + esc(posCat) + '</td><td></td>';
+      const genero = cat.includes('Femenino') ? 'F' : cat.includes('Masculino') ? 'M' : '—';
+      let tiempo = '—';
+      if (c.tiempo_llegada && d.hora_inicio) {
+        const diff = new Date(c.tiempo_llegada) - new Date(d.hora_inicio);
+        if (diff > 0) {
+          const h = Math.floor(diff / 3600000);
+          const m = Math.floor((diff % 3600000) / 60000);
+          const s = Math.floor((diff % 60000) / 1000);
+          tiempo = h + 'h ' + m + 'm ' + s + 's';
+        }
+      }
+      tr.innerHTML = '<td>' + esc(c.dorsal) + '</td><td>' + esc(c.nombre) + '</td><td>' + badge + '</td><td>' + genero + '</td><td>' + tiempo + '</td><td>' + esc(posCat) + '</td><td></td>';
       const btn = document.createElement('button');
       btn.className = 'rojo';
       btn.style.cssText = 'padding:4px 10px;font-size:.8rem';
