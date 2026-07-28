@@ -201,6 +201,10 @@ td button:active { transform: scale(.88); }
     </div>
   </div>
   <div class="main-content">
+  <div id="limpiar-top" style="display:none; text-align:right; margin-bottom:12px;">
+    <button id="btn-limpiar" class="rojo" onclick="limpiar()" style="font-size:.8rem; padding:8px 16px;">Limpiar todos los datos</button>
+    <span style="font-size:.7rem;color:#b85048;margin-left:8px;">Elimina TODOS los corredores</span>
+  </div>
   <div class="seccion">
     <h2>Registro de participantes</h2>
     <div class="fila">
@@ -239,10 +243,6 @@ td button:active { transform: scale(.88); }
       <button onclick="resultados()">Ver resultados</button>
       <button onclick="reporte()">Descargar reporte</button>
       <button onclick="estadisticas()">Estadísticas</button>
-    </div>
-    <div class="fila espaciada">
-      <button id="btn-limpiar" class="rojo" onclick="limpiar()" style="display:none">Limpiar todos los datos</button>
-      <span style="font-size:.75rem;color:#b85048;font-weight:500;">Elimina todos los corredores y reinicia la carrera</span>
     </div>
   </div>
   <div class="buscar-wrap">
@@ -323,13 +323,13 @@ function cargar() {
       est.className = 'estado andando';
       document.getElementById('btn-iniciar').disabled = true;
       document.getElementById('btn-finalizar').style.display = '';
-      document.getElementById('btn-limpiar').style.display = 'none';
+      document.getElementById('limpiar-top').style.display = 'none';
     } else {
       est.textContent = 'Carrera no iniciada';
       est.className = 'estado parada';
       document.getElementById('btn-iniciar').disabled = false;
       document.getElementById('btn-finalizar').style.display = 'none';
-      document.getElementById('btn-limpiar').style.display = '';
+      document.getElementById('limpiar-top').style.display = '';
     }
   }).catch(e => { if(e.message !== 'Error de conexión') mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'); });
 }
