@@ -983,37 +983,33 @@ def api_reporte():
         if not inicio:
             cur.close()
             return jsonify(error="La carrera no ha iniciado."), 400
-        cur.execute("SELECT posicion, posicion_categoria, dorsal, nombre, categoria, tiempo_llegada FROM corredores WHERE tiempo_llegada IS NOT NULL ORDER BY COALESCE(categoria, ''), posicion_categoria, id")
+        cur.execute("SELECT posicion, posicion_categoria, dorsal, categoria, tiempo_llegada FROM corredores WHERE tiempo_llegada IS NOT NULL ORDER BY COALESCE(categoria, ''), posicion_categoria, id")
         rows = cur.fetchall()
         cur.close()
-        from openpyxl.styles import Font
+        from openpyxl.styles import Font, Alignment
         wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Reporte Burrotón"
-        cats_order = ["Novato", "Profesional"]
-        existing = sorted(set(r[4] or "Sin categoría" for r in rows))
-        for c in existing:
-            if c not in cats_order:
-                cats_order.append(c)
-        headers = ["Posición Gral", "Pos. Categoría", "Núm.", "Nombre", "Tiempo Llegada", "Tiempo Transcurrido"]
-        primero = True
-        for cat in cats_order:
-            cat_rows = [r for r in rows if (r[4] or "Sin categoría") == cat]
-            if not cat_rows:
-                continue
-            if not primero:
-                ws.append([])
-            primero = False
-            ws.append([f"{cat.upper()}"])
-            ws.cell(row=ws.max_row, column=1).font = Font(bold=True, size=12)
-            ws.append(headers)
-            for cell in ws[ws.max_row]:
+        wb.remove(wb.active)
+        headers = ["Posición General", "Pos. Categoría", "Núm.", "Tiempo"]
+        cats = ["Novato", "Profesional"]
+        for cat in cats:
+            ws = wb.create_sheet(title=cat)
+            cat_rows = [r for r in rows if (r[3] or "Sin categoría") == cat]
+            for c in headers:
+                cell = ws.cell(row=1, column=headers.index(c) + 1, value=c)
                 cell.font = Font(bold=True)
-            for r in cat_rows:
-                trans = abs(r[5] - inicio)
+                cell.alignment = Alignment(horizontal="center")
+            for i, r in enumerate(cat_rows, 1):
+                trans = abs(r[4] - inicio)
                 h, resto = divmod(int(trans.total_seconds()), 3600)
                 m, s = divmod(resto, 60)
-                ws.append([r[0], r[1], r[2], r[3], r[5].isoformat(), f"{h}h {m}m {s}s"])
+                ws.cell(row=i + 1, column=1, value=r[0])
+                ws.cell(row=i + 1, column=2, value=r[1])
+                ws.cell(row=i + 1, column=3, value=r[2])
+                ws.cell(row=i + 1, column=4, value=f"{h}h {m}m {s}s")
+            ws.column_dimensions["A"].width = 18
+            ws.column_dimensions["B"].width = 16
+            ws.column_dimensions["C"].width = 10
+            ws.column_dimensions["D"].width = 16
         buf = io.BytesIO()
         wb.save(buf)
         buf.seek(0)
