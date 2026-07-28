@@ -24,7 +24,7 @@ def _genero(cat):
 def get_db():
     if 'db' not in g:
         try:
-            conn = psycopg2.connect(DB_URL, connect_timeout=10)
+            conn = psycopg2.connect(DB_URL, connect_timeout=5)
             conn.autocommit = True
             g.db = conn
         except Exception as e:
@@ -42,6 +42,9 @@ def cerrar_db(exception=None):
             pass
 
 def init_db():
+    global _db_initialized
+    if _db_initialized:
+        return
     conn = get_db()
     if not conn:
         return
@@ -50,17 +53,18 @@ def init_db():
         cur.execute("CREATE TABLE IF NOT EXISTS carrera (id SERIAL PRIMARY KEY, iniciada BOOLEAN DEFAULT FALSE, hora_inicio TIMESTAMP)")
         cur.execute("CREATE TABLE IF NOT EXISTS corredores (id SERIAL PRIMARY KEY, dorsal VARCHAR(20) UNIQUE NOT NULL, nombre VARCHAR(200) NOT NULL, tiempo_llegada TIMESTAMP, posicion INTEGER)")
         cur.execute("ALTER TABLE corredores ADD COLUMN IF NOT EXISTS categoria VARCHAR(50) DEFAULT ''")
-        cur.execute("ALTER TABLE corredores ALTER COLUMN categoria TYPE VARCHAR(50)")
         cur.execute("ALTER TABLE corredores ADD COLUMN IF NOT EXISTS posicion_categoria INTEGER")
         cur.execute("SELECT COUNT(*) FROM carrera")
         if cur.fetchone()[0] == 0:
             cur.execute("INSERT INTO carrera (iniciada) VALUES (FALSE)")
         cur.close()
+        _db_initialized = True
     except Exception as e:
         traceback.print_exc()
 
 LOGO_IZQ = "/static/BURROTON 2026.png"
 LOGO_DER = "/static/LOGO SAN BENITO JOSE.png"
+_db_initialized = False
 
 HTML = """<!DOCTYPE html>
 <html lang="es">
@@ -778,6 +782,7 @@ def api_llegada():
         posicion = cur.fetchone()[0] + 1
         cur.execute("SELECT COUNT(*) FROM corredores WHERE tiempo_llegada IS NOT NULL AND COALESCE(categoria, '') = COALESCE(%s, '')", (row[2],))
         posicion_categoria = cur.fetchone()[0] + 1
+
         cur.execute("UPDATE corredores SET tiempo_llegada = %s, posicion = %s, posicion_categoria = %s WHERE id = %s", (ahora, posicion, posicion_categoria, row[0]))
         cur.execute("SELECT hora_inicio FROM carrera WHERE id = 1 FOR UPDATE")
         inicio = cur.fetchone()[0]
