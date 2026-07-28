@@ -222,7 +222,6 @@ td button:active { transform: scale(.88); }
       <div id="estado-carrera" class="estado parada">Carrera no iniciada</div>
       <button id="btn-iniciar" class="verde" onclick="iniciar()">Iniciar carrera</button>
       <button id="btn-finalizar" class="rojo" onclick="finalizar()" style="display:none">Finalizar carrera</button>
-      <button id="btn-limpiar" class="" onclick="limpiar()" style="display:none">Limpiar datos</button>
     </div>
     <div class="fila espaciada">
       <select id="modo-registro" onchange="cambioModo(this)">
@@ -240,6 +239,10 @@ td button:active { transform: scale(.88); }
       <button onclick="resultados()">Ver resultados</button>
       <button onclick="reporte()">Descargar reporte</button>
       <button onclick="estadisticas()">Estadísticas</button>
+    </div>
+    <div class="fila espaciada">
+      <button id="btn-limpiar" class="rojo" onclick="limpiar()" style="display:none">Limpiar todos los datos</button>
+      <span style="font-size:.75rem;color:#b85048;font-weight:500;">Elimina todos los corredores y reinicia la carrera</span>
     </div>
   </div>
   <div class="buscar-wrap">
@@ -443,6 +446,27 @@ function limpiar() {
     fetch('/api/limpiar', {method:'POST'}).then(r=>r.json()).then(d=> { if(d.error) mostrarModal(d.error); else toast('Datos eliminados'); cargar(); }).catch(e => mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'));
   });
 }
+let _resultadosData = null;
+function renderResultados() {
+  if (!_resultadosData) return;
+  const q = (document.getElementById('resultados-search')?.value || '').toLowerCase().trim();
+  const { llegados, cats, ordenCats } = _resultadosData;
+  let html = '<input id="resultados-search" placeholder="Buscar por nombre o número..." oninput="renderResultados()" style="width:100%;padding:10px 14px;font-size:.9rem;border-radius:8px;border:1px solid #d0d8e0;outline:none;font-family:inherit;margin-bottom:14px;background:#fff;color:#1c2838;box-sizing:border-box;">';
+  html += '<div style="max-height:420px;overflow-y:auto;">';
+  ordenCats.forEach(cat => {
+    if (!cats[cat]) return;
+    const filtered = cats[cat].filter(c => !q || c.nombre.toLowerCase().includes(q) || c.dorsal.toLowerCase().includes(q));
+    if (!filtered.length) return;
+    html += '<div style="font-weight:700;font-size:.75rem;color:#2c5f8a;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.08em;">🏅 ' + esc(cat) + '</div>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:.82rem;"><tr style="background:#f0f2f5;"><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Pos</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Núm.</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Nombre</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Tiempo</th></tr>';
+    filtered.forEach(c => {
+      html += '<tr><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">#' + esc(String(c.pos_cat)) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + esc(c.dorsal) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + esc(c.nombre) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + c.tiempo + '</td></tr>';
+    });
+    html += '</table>';
+  });
+  html += '</div>';
+  document.getElementById('modal-msg').innerHTML = html;
+}
 function resultados() {
   fetch('/api/resultados').then(r=>r.json()).then(d=> {
     if(d.error) return mostrarModal(d.error);
@@ -451,14 +475,14 @@ function resultados() {
       if (!cats[c.categoria]) cats[c.categoria] = [];
       cats[c.categoria].push(c);
     });
-    let txt = 'RESULTADOS\\n' + '='.repeat(30) + '\\n';
     const ordenCats = ['Novato', 'Profesional', 'Sin categoría'];
-    ordenCats.forEach(cat => {
-      if (!cats[cat]) return;
-      txt += '\\n  🏅 ' + cat.toUpperCase() + '\\n' + '-'.repeat(20) + '\\n';
-      cats[cat].forEach(c => { txt += '  #' + c.pos_cat + '  ' + c.dorsal + '  ' + c.nombre + '  ' + c.tiempo + '\\n'; });
-    });
-    mostrarModal(txt);
+    _resultadosData = { llegados: d.llegados, cats, ordenCats };
+    const modal = document.getElementById('modal');
+    renderResultados();
+    document.getElementById('modal-botones').innerHTML = '<button class="btn-ok" onclick="cerrarModal(); _resultadosData=null">Cerrar</button>';
+    modal.classList.add('show');
+    document.querySelector('.modal-card').classList.add('estadisticas');
+    setTimeout(() => document.getElementById('resultados-search')?.focus(), 100);
   }).catch(e => mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'));
 }
 function reporte() {
