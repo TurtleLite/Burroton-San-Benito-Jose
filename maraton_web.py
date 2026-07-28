@@ -266,7 +266,7 @@ td button:active { transform: scale(.88); }
   </div>
 </div>
 </div>
-<div class="footer"><span>TURTLELITE</span><span class="conexion"><span class="con-indicator" id="con-indicator"></span><span id="con-text">Conectando...</span></span></div>
+<div class="footer"><span>TURTLELITE</span><span>Sistema Web de Gestión de Maratón</span><span class="conexion"><span class="con-indicator" id="con-indicator"></span><span id="con-text">Conectando...</span></span></div>
 <div id="toast" class="toast"></div>
 <div class="modal-overlay" id="modal">
   <div class="modal-card">
