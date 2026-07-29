@@ -193,6 +193,7 @@ td button:active { transform: scale(.88); }
 .con-indicator.offline { background: #b85048; box-shadow: 0 0 4px #b85048; }
 .con-indicator.checking { background: #c9953e; box-shadow: 0 0 4px #c9953e; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+.live-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#e03030; margin-right:6px; animation:pulse 1s infinite; vertical-align:middle; }
 @media (max-width: 700px) {
   .header-wrap { padding: 8px 16px 6px; }
   .header { gap: 8px; }
@@ -263,6 +264,7 @@ td button:active { transform: scale(.88); }
     <h2>Reportes</h2>
     <div class="fila">
       <button onclick="resultados()">Ver resultados</button>
+      <button onclick="verEnVivo()">Ver en vivo</button>
       <button onclick="reporte()">Descargar reporte</button>
       <button onclick="estadisticas()">Estadísticas</button>
     </div>
@@ -382,6 +384,7 @@ function mostrarModal(msg) {
 function cerrarModal() {
   document.getElementById('modal').classList.remove('show');
   document.querySelector('.modal-card').classList.remove('estadisticas');
+  detenerEnVivo();
 }
 function confirmarModal(msg) {
   return new Promise(resolve => {
@@ -530,6 +533,49 @@ function resultados() {
     setTimeout(() => document.getElementById('resultados-search')?.focus(), 100);
   }).catch(e => mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'));
 }
+let _vivoInterval = null;
+function detenerEnVivo() {
+  if (_vivoInterval) { clearInterval(_vivoInterval); _vivoInterval = null; }
+}
+function renderVivo(d) {
+  const cats = ['Novato Masculino','Novato Femenino','Profesional Masculino','Profesional Femenino','Sin categoría'];
+  const agrupados = {};
+  (d.llegados||[]).forEach(c => {
+    const k = c.categoria || 'Sin categoría';
+    if (!agrupados[k]) agrupados[k] = [];
+    agrupados[k].push(c);
+  });
+  let html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span class="live-dot"></span><span style="font-size:.8rem;color:#8a9aa8;font-weight:500;">Actualizando cada 3s</span></div>';
+  html += '<div style="max-height:420px;overflow-y:auto;">';
+  cats.forEach(cat => {
+    const list = agrupados[cat] || [];
+    if (!list.length) return;
+    html += '<div style="font-weight:700;font-size:.75rem;color:#2c5f8a;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.08em;">🏅 ' + esc(cat) + '</div>';
+    html += '<table style="width:100%;border-collapse:collapse;font-size:.82rem;"><tr style="background:#f0f2f5;"><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Pos</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Núm.</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Nombre</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Tiempo</th></tr>';
+    list.forEach(c => {
+      html += '<tr><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">#' + esc(String(c.pos_cat)) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + esc(c.dorsal) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + esc(c.nombre) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + c.tiempo + '</td></tr>';
+    });
+    html += '</table>';
+  });
+  html += '</div>';
+  const container = document.getElementById('vivo-tabla');
+  if (container) container.innerHTML = html;
+}
+function verEnVivo() {
+  detenerEnVivo();
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-msg').innerHTML = '<div id="vivo-tabla"><div style="text-align:center;padding:20px;color:#8a9aa8;">Cargando...</div></div>';
+  document.getElementById('modal-botones').innerHTML = '<button class="btn-ok" onclick="cerrarModal()">Cerrar</button>';
+  modal.classList.add('show');
+  document.querySelector('.modal-card').classList.add('estadisticas');
+  function fetchVivo() {
+    fetch('/api/resultados').then(r => r.json()).then(d => {
+      if (!d.error) renderVivo(d);
+    }).catch(() => {});
+  }
+  fetchVivo();
+  _vivoInterval = setInterval(fetchVivo, 3000);
+}
 function reporte() {
   window.location.href = '/api/reporte';
 }
@@ -620,6 +666,30 @@ async function chequearConexion() {
 }
 setInterval(chequearConexion, 15000);
 chequearConexion();
+// Auto‑refresh en tiempo real
+let intervaloRefresco = null;
+let autoRefreshActivo = true;
+function iniciarAutoRefresh() {
+  if (intervaloRefresco) clearInterval(intervaloRefresco);
+  intervaloRefresco = setInterval(() => {
+    if (!autoRefreshActivo) return;
+    cargar();
+  }, 5000);
+}
+document.addEventListener('visibilitychange', () => {
+  autoRefreshActivo = !document.hidden;
+  if (autoRefreshActivo) cargar();
+});
+(function() {
+  const el = document.querySelector('.header-titles .header-main');
+  if (el) {
+    const badge = document.createElement('span');
+    badge.style.cssText = 'font-size:.6rem;color:#3a8a5a;font-weight:600;display:inline-block;letter-spacing:.08em;margin-left:8px;vertical-align:middle;';
+    badge.textContent = '🔴 EN VIVO';
+    el.appendChild(badge);
+  }
+})();
+iniciarAutoRefresh();
 cargar();
 </script>
 </body>
