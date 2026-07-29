@@ -680,15 +680,6 @@ document.addEventListener('visibilitychange', () => {
   autoRefreshActivo = !document.hidden;
   if (autoRefreshActivo) cargar();
 });
-(function() {
-  const el = document.querySelector('.header-titles .header-main');
-  if (el) {
-    const badge = document.createElement('span');
-    badge.style.cssText = 'font-size:.6rem;color:#3a8a5a;font-weight:600;display:inline-block;letter-spacing:.08em;margin-left:8px;vertical-align:middle;';
-    badge.textContent = '🔴 EN VIVO';
-    el.appendChild(badge);
-  }
-})();
 iniciarAutoRefresh();
 cargar();
 </script>
