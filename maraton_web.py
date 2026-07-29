@@ -194,6 +194,26 @@ td button:active { transform: scale(.88); }
 .con-indicator.checking { background: #c9953e; box-shadow: 0 0 4px #c9953e; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
 .live-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#e03030; margin-right:6px; animation:pulse 1s infinite; vertical-align:middle; }
+.vivo-full { position:fixed; inset:0; z-index:2000; background:#0f1720; display:flex; flex-direction:column; padding:24px 32px; overflow:hidden; }
+.vivo-full .vivo-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-shrink:0; }
+.vivo-full .vivo-head .vivo-titulo { display:flex; align-items:center; gap:10px; }
+.vivo-full .vivo-head .vivo-titulo h1 { font-size:1.4rem; color:#f0f2f5; font-weight:700; letter-spacing:-.02em; margin:0; }
+.vivo-full .vivo-head .vivo-titulo .live-dot { width:12px; height:12px; }
+.vivo-full .vivo-head button { background:rgba(255,255,255,.08); border:none; color:#8a9aa8; font-size:1.5rem; cursor:pointer; width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; transition:all .15s ease; }
+.vivo-full .vivo-head button:hover { background:rgba(255,255,255,.15); color:#f0f2f5; }
+.vivo-full .vivo-grid { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:16px; min-height:0; }
+.vivo-full .vivo-grid .vivo-cat { background:#1a2633; border-radius:10px; padding:16px 18px; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+.vivo-full .vivo-grid .vivo-cat h2 { font-size:.85rem; color:#c9953e; font-weight:600; text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; flex-shrink:0; }
+.vivo-full .vivo-grid .vivo-cat .vivo-count { font-size:.7rem; color:#5a7a8a; margin-left:8px; font-weight:400; }
+.vivo-full .vivo-grid .vivo-cat .vivo-tabla-wrap { flex:1; overflow-y:auto; min-height:0; }
+.vivo-full .vivo-grid .vivo-cat table { width:100%; border-collapse:collapse; font-size:.85rem; }
+.vivo-full .vivo-grid .vivo-cat th { padding:6px 10px; text-align:left; color:#8a9aa8; font-weight:500; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #263040; position:sticky; top:0; background:#1a2633; z-index:1; }
+.vivo-full .vivo-grid .vivo-cat td { padding:6px 10px; color:#d0d8e0; border-bottom:1px solid #1e2a38; }
+.vivo-full .vivo-grid .vivo-cat tbody tr:hover td { background:#223040; }
+.vivo-full .vivo-grid .vivo-empty { display:flex; align-items:center; justify-content:center; color:#3a4a58; font-size:.9rem; grid-column:1/-1; }
+.vivo-full .vivo-vacio { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#4a5a68; font-size:1.1rem; }
+.vivo-full .vivo-vacio .live-dot { width:16px; height:16px; }
+@media (max-width:900px) { .vivo-full { padding:16px; } .vivo-full .vivo-grid { grid-template-columns:1fr; } }
 @media (max-width: 700px) {
   .header-wrap { padding: 8px 16px 6px; }
   .header { gap: 8px; }
@@ -534,10 +554,17 @@ function resultados() {
   }).catch(e => mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'));
 }
 let _vivoInterval = null;
+let _vivoDiv = null;
 function detenerEnVivo() {
   if (_vivoInterval) { clearInterval(_vivoInterval); _vivoInterval = null; }
+  if (_vivoDiv) {
+    if (_vivoDiv._escHandler) document.removeEventListener('keydown', _vivoDiv._escHandler);
+    _vivoDiv.remove();
+    _vivoDiv = null;
+  }
 }
 function renderVivo(d) {
+  if (!_vivoDiv) return;
   const cats = ['Novato Masculino','Novato Femenino','Profesional Masculino','Profesional Femenino','Sin categoría'];
   const agrupados = {};
   (d.llegados||[]).forEach(c => {
@@ -545,36 +572,44 @@ function renderVivo(d) {
     if (!agrupados[k]) agrupados[k] = [];
     agrupados[k].push(c);
   });
-  let html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span class="live-dot"></span><span style="font-size:.8rem;color:#8a9aa8;font-weight:500;">Actualizando cada 3s</span></div>';
-  html += '<div style="max-height:420px;overflow-y:auto;">';
+  const grid = _vivoDiv.querySelector('.vivo-grid');
+  if (!grid) return;
+  let html = '';
+  const totalLlegados = (d.llegados||[]).length;
   cats.forEach(cat => {
     const list = agrupados[cat] || [];
-    if (!list.length) return;
-    html += '<div style="font-weight:700;font-size:.75rem;color:#2c5f8a;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.08em;">🏅 ' + esc(cat) + '</div>';
-    html += '<table style="width:100%;border-collapse:collapse;font-size:.82rem;"><tr style="background:#f0f2f5;"><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Pos</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Núm.</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Nombre</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #dce0e8;">Tiempo</th></tr>';
+    if (!list.length) {
+      html += '<div class="vivo-cat"><h2>🏅 ' + esc(cat) + ' <span class="vivo-count">0</span></h2><div class="vivo-tabla-wrap" style="display:flex;align-items:center;justify-content:center;color:#3a4a58;font-size:.8rem;">Sin llegadas aún</div></div>';
+      return;
+    }
+    html += '<div class="vivo-cat"><h2>🏅 ' + esc(cat) + ' <span class="vivo-count">' + list.length + '</span></h2><div class="vivo-tabla-wrap"><table><thead><tr><th>Pos</th><th>Núm.</th><th>Nombre</th><th>Tiempo</th></tr></thead><tbody>';
     list.forEach(c => {
-      html += '<tr><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">#' + esc(String(c.pos_cat)) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + esc(c.dorsal) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + esc(c.nombre) + '</td><td style="padding:5px 10px;border-bottom:1px solid #eef2f6;">' + c.tiempo + '</td></tr>';
+      html += '<tr><td>#' + esc(String(c.pos_cat)) + '</td><td>' + esc(c.dorsal) + '</td><td>' + esc(c.nombre) + '</td><td>' + c.tiempo + '</td></tr>';
     });
-    html += '</table>';
+    html += '</tbody></table></div></div>';
   });
-  html += '</div>';
-  const container = document.getElementById('vivo-tabla');
-  if (container) container.innerHTML = html;
+  grid.innerHTML = html;
 }
 function verEnVivo() {
   detenerEnVivo();
-  const modal = document.getElementById('modal');
-  document.getElementById('modal-msg').innerHTML = '<div id="vivo-tabla"><div style="text-align:center;padding:20px;color:#8a9aa8;">Cargando...</div></div>';
-  document.getElementById('modal-botones').innerHTML = '<button class="btn-ok" onclick="cerrarModal()">Cerrar</button>';
-  modal.classList.add('show');
-  document.querySelector('.modal-card').classList.add('estadisticas');
+  _vivoDiv = document.createElement('div');
+  _vivoDiv.className = 'vivo-full';
+  _vivoDiv.innerHTML = '<div class="vivo-head"><div class="vivo-titulo"><span class="live-dot"></span><h1>Burrotón — En Vivo</h1><span style="color:#5a7a8a;font-size:.8rem;font-weight:400;">' + new Date().toLocaleTimeString('es-MX') + '</span></div><button onclick="detenerEnVivo()" title="Cerrar">✕</button></div><div class="vivo-grid"></div>';
+  document.body.appendChild(_vivoDiv);
+  function escHandler(e) { if (e.key === 'Escape') detenerEnVivo(); }
+  document.addEventListener('keydown', escHandler);
   function fetchVivo() {
     fetch('/api/resultados').then(r => r.json()).then(d => {
       if (!d.error) renderVivo(d);
+      if (_vivoDiv) {
+        const t = _vivoDiv.querySelector('.vivo-titulo span:last-child');
+        if (t) t.textContent = new Date().toLocaleTimeString('es-MX');
+      }
     }).catch(() => {});
   }
   fetchVivo();
   _vivoInterval = setInterval(fetchVivo, 3000);
+  _vivoDiv._escHandler = escHandler;
 }
 function reporte() {
   window.location.href = '/api/reporte';
