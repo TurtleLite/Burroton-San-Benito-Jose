@@ -194,24 +194,29 @@ td button:active { transform: scale(.88); }
 .con-indicator.checking { background: #c9953e; box-shadow: 0 0 4px #c9953e; animation: pulse 1s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
 .live-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#e03030; margin-right:6px; animation:pulse 1s infinite; vertical-align:middle; }
-.vivo-full { position:fixed; inset:0; z-index:2000; background:#0f1720; display:flex; flex-direction:column; padding:24px 32px; overflow:hidden; }
+.vivo-full { position:fixed; inset:0; z-index:2000; background:#f4f6f9; display:flex; flex-direction:column; padding:24px 32px; overflow:hidden; }
 .vivo-full .vivo-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-shrink:0; }
 .vivo-full .vivo-head .vivo-titulo { display:flex; align-items:center; gap:10px; }
-.vivo-full .vivo-head .vivo-titulo h1 { font-size:1.4rem; color:#f0f2f5; font-weight:700; letter-spacing:-.02em; margin:0; }
+.vivo-full .vivo-head .vivo-titulo h1 { font-size:1.4rem; color:#1c2838; font-weight:700; letter-spacing:-.02em; margin:0; }
 .vivo-full .vivo-head .vivo-titulo .live-dot { width:12px; height:12px; }
-.vivo-full .vivo-head button { background:rgba(255,255,255,.08); border:none; color:#8a9aa8; font-size:1.5rem; cursor:pointer; width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; transition:all .15s ease; }
-.vivo-full .vivo-head button:hover { background:rgba(255,255,255,.15); color:#f0f2f5; }
+.vivo-full .vivo-head .vivo-timestamp { color:#8a9aa8; font-size:.8rem; font-weight:400; }
+.vivo-full .vivo-head button { background:#eaecf0; border:none; color:#5a6a78; font-size:1.5rem; cursor:pointer; width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; transition:all .15s ease; }
+.vivo-full .vivo-head button:hover { background:#d0d8e0; color:#1c2838; }
 .vivo-full .vivo-grid { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:16px; min-height:0; }
-.vivo-full .vivo-grid .vivo-cat { background:#1a2633; border-radius:10px; padding:16px 18px; display:flex; flex-direction:column; overflow:hidden; min-height:0; }
-.vivo-full .vivo-grid .vivo-cat h2 { font-size:.85rem; color:#c9953e; font-weight:600; text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; flex-shrink:0; }
-.vivo-full .vivo-grid .vivo-cat .vivo-count { font-size:.7rem; color:#5a7a8a; margin-left:8px; font-weight:400; }
+.vivo-full .vivo-grid .vivo-cat { background:#fff; border-radius:10px; padding:16px 18px; display:flex; flex-direction:column; overflow:hidden; min-height:0; border:1px solid #eaecf0; box-shadow:0 1px 3px rgba(0,0,0,.03); }
+.vivo-full .vivo-grid .vivo-cat h2 { font-size:.85rem; color:#2c5f8a; font-weight:600; text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; flex-shrink:0; }
+.vivo-full .vivo-grid .vivo-cat .vivo-count { font-size:.7rem; color:#8a9aa8; margin-left:8px; font-weight:400; }
 .vivo-full .vivo-grid .vivo-cat .vivo-tabla-wrap { flex:1; overflow-y:auto; min-height:0; }
+.vivo-full .vivo-grid .vivo-cat .vivo-tabla-wrap::-webkit-scrollbar { width:5px; }
+.vivo-full .vivo-grid .vivo-cat .vivo-tabla-wrap::-webkit-scrollbar-track { background:transparent; }
+.vivo-full .vivo-grid .vivo-cat .vivo-tabla-wrap::-webkit-scrollbar-thumb { background:#d0d8e0; border-radius:3px; }
 .vivo-full .vivo-grid .vivo-cat table { width:100%; border-collapse:collapse; font-size:.85rem; }
-.vivo-full .vivo-grid .vivo-cat th { padding:6px 10px; text-align:left; color:#8a9aa8; font-weight:500; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid #263040; position:sticky; top:0; background:#1a2633; z-index:1; }
-.vivo-full .vivo-grid .vivo-cat td { padding:6px 10px; color:#d0d8e0; border-bottom:1px solid #1e2a38; }
-.vivo-full .vivo-grid .vivo-cat tbody tr:hover td { background:#223040; }
-.vivo-full .vivo-grid .vivo-empty { display:flex; align-items:center; justify-content:center; color:#3a4a58; font-size:.9rem; grid-column:1/-1; }
-.vivo-full .vivo-vacio { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#4a5a68; font-size:1.1rem; }
+.vivo-full .vivo-grid .vivo-cat th { padding:7px 10px; text-align:left; color:#3a4a58; font-weight:600; font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; border-bottom:2px solid #dce0e8; position:sticky; top:0; background:#fff; z-index:1; }
+.vivo-full .vivo-grid .vivo-cat td { padding:7px 10px; color:#1c2838; border-bottom:1px solid #eaecf0; }
+.vivo-full .vivo-grid .vivo-cat tbody tr:nth-child(even) td { background:#fafbfc; }
+.vivo-full .vivo-grid .vivo-cat tbody tr:hover td { background:#eef2f6; }
+.vivo-full .vivo-grid .vivo-empty { display:flex; align-items:center; justify-content:center; color:#8a9aa8; font-size:.9rem; grid-column:1/-1; }
+.vivo-full .vivo-vacio { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#8a9aa8; font-size:1.1rem; }
 .vivo-full .vivo-vacio .live-dot { width:16px; height:16px; }
 @media (max-width:900px) { .vivo-full { padding:16px; } .vivo-full .vivo-grid { grid-template-columns:1fr; } }
 @media (max-width: 700px) {
@@ -594,7 +599,7 @@ function verEnVivo() {
   detenerEnVivo();
   _vivoDiv = document.createElement('div');
   _vivoDiv.className = 'vivo-full';
-  _vivoDiv.innerHTML = '<div class="vivo-head"><div class="vivo-titulo"><span class="live-dot"></span><h1>Burrotón — En Vivo</h1><span style="color:#5a7a8a;font-size:.8rem;font-weight:400;">' + new Date().toLocaleTimeString('es-MX') + '</span></div><button onclick="detenerEnVivo()" title="Cerrar">✕</button></div><div class="vivo-grid"></div>';
+  _vivoDiv.innerHTML = '<div class="vivo-head"><div class="vivo-titulo"><span class="live-dot"></span><h1>Burrotón — En Vivo</h1><span class="vivo-timestamp">' + new Date().toLocaleTimeString('es-MX') + '</span></div><button onclick="detenerEnVivo()" title="Cerrar">✕</button></div><div class="vivo-grid"></div>';
   document.body.appendChild(_vivoDiv);
   function escHandler(e) { if (e.key === 'Escape') detenerEnVivo(); }
   document.addEventListener('keydown', escHandler);
@@ -602,7 +607,7 @@ function verEnVivo() {
     fetch('/api/resultados').then(r => r.json()).then(d => {
       if (!d.error) renderVivo(d);
       if (_vivoDiv) {
-        const t = _vivoDiv.querySelector('.vivo-titulo span:last-child');
+        const t = _vivoDiv.querySelector('.vivo-timestamp');
         if (t) t.textContent = new Date().toLocaleTimeString('es-MX');
       }
     }).catch(() => {});
