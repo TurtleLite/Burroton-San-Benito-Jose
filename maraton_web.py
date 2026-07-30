@@ -385,7 +385,7 @@ function cargar() {
     document.getElementById('contador').textContent = 'Total: ' + total + ' corredores' + (filtroActual ? ' — mostrando ' + visibles + ' ' + filtroActual : '');
     const est = document.getElementById('estado-carrera');
     if (d.carrera_iniciada) {
-      est.textContent = 'Carrera en curso — Salida: ' + d.hora_inicio;
+      est.textContent = 'CARRERA EN CURSO ' + d.hora_inicio;
       est.className = 'estado andando';
       document.getElementById('btn-iniciar').disabled = true;
       document.getElementById('btn-finalizar').style.display = '';
