@@ -385,7 +385,7 @@ function cargar() {
     document.getElementById('contador').textContent = 'Total: ' + total + ' corredores' + (filtroActual ? ' — mostrando ' + visibles + ' ' + filtroActual : '');
     const est = document.getElementById('estado-carrera');
     if (d.carrera_iniciada) {
-      est.textContent = 'CARRERA EN CURSO ' + (d.hora_inicio ? new Date(d.hora_inicio).toLocaleTimeString('es-HN', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, timeZone:'America/Tegucigalpa'}) : '');
+      est.textContent = 'CARRERA EN CURSO ' + (d.hora_inicio ? new Date(d.hora_inicio + 'Z').toLocaleTimeString('es-HN', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, timeZone:'America/Tegucigalpa'}) : '');
       est.className = 'estado andando';
       document.getElementById('btn-iniciar').disabled = true;
       document.getElementById('btn-finalizar').style.display = '';
