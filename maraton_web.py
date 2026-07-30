@@ -254,11 +254,14 @@ td button:active { transform: scale(.88); }
       <input id="dorsal-input" placeholder="Número" size="6">
       <input id="nombre-input" placeholder="Nombre del corredor">
       <select id="categoria-input">
-        <option value="">Sin categoría</option>
-        <option value="Novato Masculino">Novato Masculino</option>
-        <option value="Novato Femenino">Novato Femenino</option>
-        <option value="Profesional Masculino">Profesional Masculino</option>
-        <option value="Profesional Femenino">Profesional Femenino</option>
+        <option value="">Categoría</option>
+        <option value="Novato">Novato</option>
+        <option value="Profesional">Profesional</option>
+      </select>
+      <select id="genero-input">
+        <option value="">Género</option>
+        <option value="Masculino">Masculino</option>
+        <option value="Femenino">Femenino</option>
       </select>
       <button onclick="registrar(this)">Registrar</button>
       <button onclick="document.getElementById('excel-input').click()">Importar Excel</button>
@@ -462,20 +465,25 @@ function registrar(btn) {
   const dorsal = document.getElementById('dorsal-input').value.trim();
   const nombre = document.getElementById('nombre-input').value.trim();
   const categoria = document.getElementById('categoria-input').value;
+  const genero = document.getElementById('genero-input').value;
   if (!dorsal || !nombre) return mostrarModal('Completa número y nombre.');
-  _fetch('/api/registrar', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({dorsal, nombre, categoria}) }, btn)
+  if (!categoria || !genero) return mostrarModal('Selecciona categoría y género.');
+  const catCompleta = categoria + ' ' + genero;
+  _fetch('/api/registrar', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({dorsal, nombre, categoria: catCompleta}) }, btn)
     .then(d => {
       if (d.duplicado) {
         confirmarModal('El número ' + dorsal + ' ya está registrado.\\n¿Reemplazarlo por ' + nombre + '?').then(r => {
           if (!r) return;
-          _fetch('/api/registrar', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({dorsal, nombre, categoria, reemplazar: true}) }, btn)
-            .then(d2 => { if(d2.error) mostrarModal(d2.error); else { document.getElementById('dorsal-input').value=''; document.getElementById('nombre-input').value=''; toast('Corredor reemplazado'); cargar(); } });
+          _fetch('/api/registrar', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({dorsal, nombre, categoria: catCompleta, reemplazar: true}) }, btn)
+            .then(d2 => { if(d2.error) mostrarModal(d2.error); else { document.getElementById('dorsal-input').value=''; document.getElementById('nombre-input').value=''; document.getElementById('categoria-input').value=''; document.getElementById('genero-input').value=''; toast('Corredor reemplazado'); cargar(); } });
         });
       } else if (d.error) {
         mostrarModal(d.error);
       } else {
         document.getElementById('dorsal-input').value='';
         document.getElementById('nombre-input').value='';
+        document.getElementById('categoria-input').value='';
+        document.getElementById('genero-input').value='';
         toast('Corredor registrado');
         cargar();
       }
@@ -973,50 +981,48 @@ def api_importar_excel():
         col_genero = None
         for i, h in enumerate(header_names):
             h_lower = h.lower()
-            if "dorsal" in h_lower or "numero" in h_lower or "num" in h_lower:
+            if any(x in h_lower for x in ("dorsal", "numero", "num", "número")):
                 col_dorsal = i
-            if "nombre" in h_lower or "corredor" in h_lower or "apellido" in h_lower or "participante" in h_lower:
+            if any(x in h_lower for x in ("nombre", "corredor", "apellido", "participante")):
                 col_nombre = i
-            if "categoria" in h_lower or "categoría" in h_lower or "cat" in h_lower or "tipo" in h_lower or "nivel" in h_lower or "clase" in h_lower or "grupo" in h_lower or "division" in h_lower or "división" in h_lower or "novato" in h_lower or "profesional" in h_lower:
+            if any(x in h_lower for x in ("categoria", "categoría", "cat", "tipo", "nivel", "novato", "profesional")):
                 col_categoria = i
-            if "genero" in h_lower or "gênero" in h_lower or "sexo" in h_lower or "gender" in h_lower:
+            if any(x in h_lower for x in ("genero", "género", "sexo", "gender")):
                 col_genero = i
-        if col_dorsal is None or col_nombre is None:
-            return jsonify(error="No se encontraron columnas 'Número' y 'Nombre'."), 400
+        missing = []
+        if col_dorsal is None: missing.append("Número/Dorsal")
+        if col_nombre is None: missing.append("Nombre")
+        if col_categoria is None: missing.append("Categoría (Novato/Profesional)")
+        if col_genero is None: missing.append("Género (F/M)")
+        if missing:
+            return jsonify(error="No se encontraron las columnas requeridas: " + ", ".join(missing) + ". El Excel debe tener columnas de Número, Nombre, Categoría y Género."), 400
         conn = get_db()
         if not conn:
             return jsonify(error="Base de datos no disponible"), 503
         cur = conn.cursor()
         cont = 0
-        ejemplo_valor = ""
         for row in ws.iter_rows(min_row=2, values_only=True):
             dorsal = str(row[col_dorsal]).strip() if row[col_dorsal] is not None else ""
             nombre = str(row[col_nombre]).strip() if row[col_nombre] is not None else ""
             if not dorsal or not nombre:
                 continue
-            categoria = ""
-            if col_categoria is not None and row[col_categoria] is not None:
-                raw = row[col_categoria]
-                ejemplo_valor = repr(raw)
-                val = str(raw).strip().lower()
-                if "novato" in val:
-                    base = "Novato"
-                elif "profesional" in val:
-                    base = "Profesional"
-                else:
-                    base = ""
-                    ejemplo_valor = f"'{raw}' (no coincide)"
-                genero = ""
-                if col_genero is not None and row[col_genero] is not None:
-                    g = str(row[col_genero]).strip().lower()
-                    if "masculino" in g or g in ("m", "hombre", "male", "h"):
-                        genero = "Masculino"
-                    elif "femenino" in g or g in ("f", "mujer", "female", "muj"):
-                        genero = "Femenino"
-                if base and genero:
-                    categoria = f"{base} {genero}"
-                elif base:
-                    categoria = base
+            cat_raw = str(row[col_categoria]).strip().lower() if row[col_categoria] is not None else ""
+            gen_raw = str(row[col_genero]).strip().lower() if row[col_genero] is not None else ""
+            if not cat_raw or not gen_raw:
+                continue
+            if "novato" in cat_raw:
+                base = "Novato"
+            elif "profesional" in cat_raw:
+                base = "Profesional"
+            else:
+                continue
+            if gen_raw in ("m", "masculino", "hombre", "male", "h"):
+                genero = "Masculino"
+            elif gen_raw in ("f", "femenino", "mujer", "female", "muj"):
+                genero = "Femenino"
+            else:
+                continue
+            categoria = f"{base} {genero}"
             cur.execute("""
                 INSERT INTO corredores (dorsal, nombre, categoria) VALUES (%s, %s, %s)
                 ON CONFLICT (dorsal) DO UPDATE SET nombre = %s, categoria = %s,
@@ -1025,9 +1031,7 @@ def api_importar_excel():
             conn.commit()
             cont += 1
         cur.close()
-        info_cat = f" Columna: '{header_names[col_categoria] if col_categoria is not None else 'no detectada'}'."
-        info_val = f" Valor ejemplo: {ejemplo_valor}." if ejemplo_valor else ""
-        return jsonify(mensaje=f"Se importaron {cont} corredores.{info_cat}{info_val}")
+        return jsonify(mensaje=f"Se importaron {cont} corredores.")
     except Exception as e:
         traceback.print_exc()
         return jsonify(error="Error al procesar el Excel"), 500
