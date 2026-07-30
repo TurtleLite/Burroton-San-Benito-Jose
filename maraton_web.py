@@ -218,6 +218,8 @@ td button:active { transform: scale(.88); }
 .vivo-full .vivo-grid .vivo-empty { display:flex; align-items:center; justify-content:center; color:#8a9aa8; font-size:.9rem; grid-column:1/-1; }
 .vivo-full .vivo-vacio { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#8a9aa8; font-size:1.1rem; }
 .vivo-full .vivo-vacio .live-dot { width:16px; height:16px; }
+.vivo-full .vivo-scroll { flex:1; overflow-y:auto; min-height:0; padding:0 4px 20px; }
+.vivo-full .vivo-scroll input { width:100%; padding:12px 16px; font-size:.9rem; border-radius:8px; border:1px solid #d0d8e0; outline:none; font-family:inherit; margin-bottom:16px; background:#fff; color:#1c2838; box-sizing:border-box; }
 @media (max-width:900px) { .vivo-full { padding:16px; } .vivo-full .vivo-grid { grid-template-columns:1fr; } }
 @media (max-width: 700px) {
   .header-wrap { padding: 8px 16px 6px; }
@@ -532,7 +534,7 @@ function renderResultados() {
   if (!_resultadosData) return;
   const q = (document.getElementById('resultados-search')?.value || '').toLowerCase().trim();
   const { cats, ordenCats } = _resultadosData;
-  let html = '<div style="max-height:420px;overflow-y:auto;">';
+  let html = '<div>';
   ordenCats.forEach(cat => {
     if (!cats[cat]) return;
     const filtered = cats[cat].filter(c => !q || c.nombre.toLowerCase().includes(q) || c.dorsal.toLowerCase().includes(q));
@@ -550,19 +552,22 @@ function renderResultados() {
 function resultados() {
   fetch('/api/resultados').then(r=>r.json()).then(d=> {
     if(d.error) return mostrarModal(d.error);
+    detenerEnVivo();
     const cats = {};
     d.llegados.forEach(c => {
       if (!cats[c.categoria]) cats[c.categoria] = [];
       cats[c.categoria].push(c);
     });
     const ordenCats = ['Novato Masculino', 'Novato Femenino', 'Profesional Masculino', 'Profesional Femenino', 'Sin categoría'];
-    _resultadosData = { llegados: d.llegados, cats, ordenCats };
-    const modal = document.getElementById('modal');
-    document.getElementById('modal-msg').innerHTML = '<input id="resultados-search" placeholder="Buscar por nombre o número..." oninput="renderResultados()" style="width:100%;padding:10px 14px;font-size:.9rem;border-radius:8px;border:1px solid #d0d8e0;outline:none;font-family:inherit;margin-bottom:14px;background:#fff;color:#1c2838;box-sizing:border-box;"><div id="resultados-tabla"></div>';
+    _resultadosData = { cats, ordenCats };
+    _vivoDiv = document.createElement('div');
+    _vivoDiv.className = 'vivo-full';
+    _vivoDiv.innerHTML = '<div class="vivo-head"><div class="vivo-titulo"><h1>Resultados</h1></div><button onclick="detenerEnVivo(); _resultadosData=null" title="Cerrar">✕</button></div><div class="vivo-scroll"><input id="resultados-search" placeholder="Buscar por nombre o número..." oninput="renderResultados()"><div id="resultados-tabla"></div></div>';
+    document.body.appendChild(_vivoDiv);
+    function escHandler(e) { if (e.key === 'Escape') { detenerEnVivo(); _resultadosData = null; } }
+    document.addEventListener('keydown', escHandler);
+    _vivoDiv._escHandler = escHandler;
     renderResultados();
-    document.getElementById('modal-botones').innerHTML = '<button class="btn-ok" onclick="cerrarModal(); _resultadosData=null">Cerrar</button>';
-    modal.classList.add('show');
-    document.querySelector('.modal-card').classList.add('estadisticas');
     setTimeout(() => document.getElementById('resultados-search')?.focus(), 100);
   }).catch(e => mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'));
 }
@@ -575,6 +580,7 @@ function detenerEnVivo() {
     _vivoDiv.remove();
     _vivoDiv = null;
   }
+  _resultadosData = null;
 }
 function renderVivo(d) {
   if (!_vivoDiv) return;
@@ -630,6 +636,7 @@ function reporte() {
 function estadisticas() {
   fetch('/api/estadisticas').then(r=>r.json()).then(d => {
     if (d.error) return mostrarModal(d.error);
+    detenerEnVivo();
     const cats = ['Novato Masculino', 'Novato Femenino', 'Profesional Masculino', 'Profesional Femenino', 'Sin categoría'];
     const maxCat = Math.max(1, ...cats.map(c => d.por_categoria[c] || 0));
     const maxArr = Math.max(1, ...cats.map(c => d.llegados_por_categoria[c] || 0));
@@ -668,11 +675,13 @@ function estadisticas() {
       });
       html += '</div>';
     }
-    const modal = document.getElementById('modal');
-    document.getElementById('modal-msg').innerHTML = html;
-    document.getElementById('modal-botones').innerHTML = '<button class="btn-ok" onclick="cerrarModal()">Cerrar</button>';
-    modal.classList.add('show');
-    document.querySelector('.modal-card').classList.add('estadisticas');
+    _vivoDiv = document.createElement('div');
+    _vivoDiv.className = 'vivo-full';
+    _vivoDiv.innerHTML = '<div class="vivo-head"><div class="vivo-titulo"><h1>Estadísticas</h1></div><button onclick="detenerEnVivo()" title="Cerrar">✕</button></div><div class="vivo-scroll">' + html + '</div>';
+    document.body.appendChild(_vivoDiv);
+    function escHandler(e) { if (e.key === 'Escape') detenerEnVivo(); }
+    document.addEventListener('keydown', escHandler);
+    _vivoDiv._escHandler = escHandler;
   }).catch(e => mostrarModal('No se pudo conectar con el servidor. Verifica que el servidor esté encendido.'));
 }
 function borrar(dorsal) {
